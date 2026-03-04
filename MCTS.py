@@ -33,16 +33,16 @@ class MCTSNode():
 
 
 
-def MCTS(GameClass, state):
-    root = MCTSNode(state, GameClass.get_actions(state))
-    for i in range(500):
+def MCTS(GameClass, root, iterations):
+    
+    for i in range(iterations):
         node = select_node(root)
         leaf_node, R, isDone = node.expand(GameClass)
         R = simulate(GameClass, leaf_node.state, R, isDone)
         backpropegate(leaf_node, R)
     
     best_choice = max(root.children, key=lambda c: c.visits)
-    return best_choice.parent_action
+    return best_choice
 
 
     
