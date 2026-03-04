@@ -4,10 +4,11 @@ class MCTSNode():
 
     c = 0.2
 
-    def __init__(self, state, actions, parent=None, parent_action=None):
+    def __init__(self, state, actions, parent=None, parent_action=None, R=None):
         self.state = state
         self.parent = parent
         self.parent_action = parent_action
+        self.R = R
         self.visits = 0
         self.rewards = 0
         self.unexplored_actions = actions
@@ -20,10 +21,12 @@ class MCTSNode():
         return UCB1
     
     def expand(self, GameClass):
+        if len(self.unexplored_actions) == 0:
+            return self, self.R, True
         random_index = np.random.randint(0, len(self.unexplored_actions))
         action = self.unexplored_actions.pop(random_index)
         child_state, R, isDone = GameClass.perform_action(self.state, action)
-        child_node = MCTSNode(child_state, GameClass.get_actions(child_state), parent=self, parent_action=action)
+        child_node = MCTSNode(child_state, GameClass.get_actions(child_state), parent=self, parent_action=action, R=R)
         self.children.append(child_node)
 
         return child_node, R, isDone

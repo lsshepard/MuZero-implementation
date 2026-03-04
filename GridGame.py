@@ -3,49 +3,67 @@ import numpy as np
 class GridGame():
 
     def __init__(self, dim=3):
-        self.dim = dim
-        self.position = (0, 0)
-        
+        board = np.zeros((dim, dim))
+        board[0][0] = 2
+        self.board = board        
 
     def get_init_state(self):
-        return (self.position, self.dim)
+        return self.board
     
     @staticmethod
     def get_actions(state):
-        position, dim = state
-        x, y = position
         actions = []
-        if x > 0: actions.append('LEFT')
-        if x < dim-1: actions.append('RIGHT')
-        if y > 0: actions.append('UP')
-        if y < dim-1: actions.append('DOWN')
-        
+        for action in ['LEFT', 'RIGHT', 'UP', 'DOWN']:
+            rotations = {'LEFT': 0, 'RIGHT': 2, 'UP': 3, 'DOWN': 1}
+            board = np.rot90(state.copy(), rotations[action])
+            slid = np.array([GridGame.slide_row(row)[0] for row in board])
+            if not np.array_equal(slid, board):
+                actions.append(action)
         return actions
     
-    # assumes legal action
+    # claude implemented
+    @staticmethod
+    def slide_row(row):
+        r = row[row != 0]
+        score, merged, i = 0, [], 0
+        while i < len(r):
+            if i + 1 < len(r) and r[i] == r[i+1]:
+                merged.append(r[i] * 2)
+                score += r[i] * 2
+                i += 2
+            else:
+                merged.append(r[i])
+                i += 1
+        padded = merged + [0] * (len(row) - len(merged))
+        return np.array(padded), score
+    
+    # claude implemented
     @staticmethod
     def perform_action(state, action):
-        position, dim = state
-        x, y = position
-        match action:
-            case 'RIGHT': x += 1
-            case 'LEFT': x -= 1
-            case 'UP': y -= 1
-            case 'DOWN': y += 1
+        rotations = {'LEFT': 0, 'RIGHT': 2, 'UP': 3, 'DOWN': 1}
+        board = np.rot90(state.copy(), rotations[action])
 
-        R, isDone = (1, True) if x == dim - 1 and y == dim - 1 else (0, False)
-        updated_state = ((x, y), dim)
+        score = 0
+        for i in range(board.shape[0]):
+            board[i], s = GridGame.slide_row(board[i])
+            score += s
 
-        return updated_state, R, isDone
+        board = np.rot90(board, -rotations[action] % 4)
+
+        empty = list(zip(*np.where(board == 0)))
+        if empty:
+            pos = empty[np.random.randint(len(empty))]
+            board[pos] = 2 if np.random.random() < 0.9 else 4
+
+        isDone = not (np.any(board == 0) or
+                    np.any(board[:, :-1] == board[:, 1:]) or
+                    np.any(board[:-1] == board[1:]))
+
+        return board, score, isDone
     
     @staticmethod
     def visualize_state(state):
-        position, dim = state
-        x, y = position
-        board = np.zeros((dim, dim))
-        board[x][y] = 1
-        board[-1][-1] = -1
-        print(board)
+        print(state)
 
     
 
