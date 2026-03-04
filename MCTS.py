@@ -49,10 +49,6 @@ def MCTS(GameClass, state, iterations):
     best_choice = max(root.children, key=lambda c: c.visits)
     return best_choice.parent_action
 
-    best_choice = max(root.children, key=lambda c: c.visits)
-    return best_choice
-
-
     
 def select_node(root: MCTSNode):
     node = root
