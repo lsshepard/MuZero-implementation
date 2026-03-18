@@ -10,6 +10,7 @@ class GridGame():
     def get_init_state(self):
         return self.board
     
+    # claude implemented
     @staticmethod
     def get_actions(state):
         actions = []

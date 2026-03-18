@@ -14,7 +14,7 @@ class RLSystem():
         self.GameClass.visualize_state(state)
         isDone = False
         i = 0
-        while not isDone and i < 100:
+        while not isDone:
             i += 1
             action = self.search_alg(self.GameClass, state, self.search_iterations)
             state, R, isDone = self.GameClass.perform_action(state, action)
@@ -23,6 +23,6 @@ class RLSystem():
 
 
 game = GridGame(dim=4)
-rl_system = RLSystem(game, MCTS, 500)
+rl_system = RLSystem(game, MCTS, 200)
 
 rl_system.run()

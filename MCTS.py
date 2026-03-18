@@ -39,12 +39,6 @@ def MCTS(GameClass, state, iterations):
         leaf_node, R, isDone = node.expand(GameClass)
         R = simulate(GameClass, leaf_node.state, R, isDone)
         backpropegate(leaf_node, R)
-    
-    if not root.children:
-        print('NO ROOT CHILDREN')
-        print(root)
-        print(root.state)
-        print(root.parent)
 
     best_choice = max(root.children, key=lambda c: c.visits)
     return best_choice.parent_action
