@@ -1,5 +1,5 @@
-from GridGame import GridGame
-from MCTS import MCTS, MCTSNode
+from vanilla_mcts.GridGame import GridGame
+from vanilla_mcts.MCTS import MCTS, MCTSNode
 
 class RLSystem():
 
