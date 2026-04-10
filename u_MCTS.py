@@ -1,5 +1,6 @@
 from NN import NN
 import numpy as np
+import jax
 
 class MCTSNode():
 
@@ -43,13 +44,14 @@ def u_MCTS(GameClass, state, iterations, NN_P, max_depth):
     
     available_actions = GameClass.get_actions(state)
     root = MCTSNode(state, available_actions, is_root=True, GameClass=GameClass)
+    jit_forward = jax.jit(lambda s: NN.forward(s, *NN_P))
 
     for i in range(iterations):
         node, d = select_node(root)
         
         leaf_node, R, isDone = node.expand(GameClass)
         
-        accum_reward = do_rollout(GameClass, leaf_node.state, R, isDone, NN_P, max_depth-d)
+        accum_reward = do_rollout(GameClass, leaf_node.state, R, isDone, jit_forward, max_depth-d)
         
         backpropegate(leaf_node, accum_reward)
     
@@ -75,22 +77,23 @@ def select_node(root: MCTSNode):
         node = max(node.children, key=lambda c: c.U(node.visits))
     return node, d
 
-def do_rollout(GameClass, init_state, init_R, init_isDone, NN_P, depth):
+def do_rollout(GameClass, init_state, init_R, init_isDone, jit_forward, depth):
 
     state, accum_reward, isDone = init_state, [init_R], init_isDone
     for d in range(depth):
         if isDone: break
-        prediction = NN.forward(state.flatten(), *NN_P)
+        prediction = jit_forward(state.flatten())
         v = prediction[0]
         pi = np.array(prediction[1:])
         total = pi.sum()
         p = pi / total if total > 0 else np.ones(len(pi)) / len(pi)
-        p[-1] = 1.0 - p[:-1].sum()
+        p = np.clip(p, 0, None)
+        p /= p.sum()
         action = np.random.choice(len(pi), p=p)
         state, R, isDone = GameClass.perform_action(state, action)
         accum_reward.append(R)
     
-    prediction = NN.forward(state.flatten(), *NN_P)
+    prediction = jit_forward(state.flatten())
     v = prediction[0]
     pi = prediction[1:]
     accum_reward.append(v)
